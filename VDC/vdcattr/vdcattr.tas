@@ -1,0 +1,1249 @@
+; vdcattr
+; --------
+; 2009-2019 Errol Smith
+
+; VDC demonstration of basic text & attributes
+
+; Start of project: 1.6.2009
+
+; Compiles with ACME 0.91
+; # acme --cpu 6502 -f cbm -o vdcattr.prg vdcattr.tas
+
+; Type RUN to start.
+
+; Known bugs:
+
+; TODO:
+
+; Memory map:
+; $0000-$03ff : (mostly) unused
+; $0400-$07ff : screen
+; $0801-$xxxx : code
+; $xxxx-$zzzz : data
+; $zzzz-$ffff : unused
+
+; Notes:
+
+
+; --- Constants
+
+!src "vdc2.a"
+
+
+
+
+
+
+
+DEBUG = 0
+
+; - colors
+color_back = $2
+color_border = $0
+color_text = $1
+color_hilite = $2
+
+; - keys
+key_up    = $91
+key_down  = $11
+
+key_left  = $9d ; dma on
+key_right = $1d ; dma off
+
+key_enter = $0d ; save reg
+key_s = $53     ; save all regs
+
+key_space = $20 ; start test
+key_g = $47     ; stop test
+
+key_y = $59     ; increase vol
+key_h = $48     ; decrease vol
+
+key_u = $55     ; increase env
+key_j = $4a     ; decrease env
+
+key_i = $49     ; env += $10
+key_k = $4b     ; env -= $10
+
+key_o = $4f     ; save env reg
+key_l = $4c     ; 
+
+
+; - kernal functions
+SCNKEY = $ff9f
+GETIN = $ffe4           ; ret: a = 0: no keys pressed, otherwise a = ASCII code
+
+; - hw addresses
+screen = $0400          ; screen address
+color = $d800           ; color ram address
+vicborder = $d020       ; border color register
+vicbackgnd = $d021      ; background color register
+vicraster = $d012       ; raster compare register
+keybuf = $0277          ; keyboard buffer
+keybuflen = $c6         ; keyboard buffer byte count
+sidbase = $d400         ; SID base address
+
+; - other
+rastercmp = $ff
+cursor_min = $7
+cursor_max = $e
+dmalen = 63*312/2 ; - 1
+
+; --- Zero page variables
+
+; temp variables
+tmp  = $23
+tmp2 = $24
+tmp3 = $25
+
+; - colorram pointer
+colptr = $fb
+colptrh = $fc
+
+; - temp pointer
+tmpptr = $fd
+tmpptrh = $fe
+
+
+
+
+!ct scr ; screencode
+
+; --- Main 
+
+crsrx = $ec
+crsry = $eb
+
+vdcattributehi=$08
+
+
+; start of program
+*=$1c01
+entry:
+; BASIC stub: "128 SYS 7181"
+!by $0b,$1c,$80,$00,$9e,$37,$31,$38,$31,$00,$00,$00
+
+
+; change some default VDC values that are wrong on early kernels (like mine)
+lda #$7f
+ldx #0
++vdc_sta_rx
+
+lda #$26
+ldx #4
++vdc_sta_rx
+
+
+; reset some registers in case they are in random settings (like graphics mode)
+ldx #25
+lda #$47
++vdc_sta_rx
+
+
+; fill char memory with stuff
+
+; set start address for vdc char write
+lda #$00	; hi address
+ldx #18
++vdc_sta_rx
+
+lda #$00	; lo address
+ldx #19
++vdc_sta_rx
+
+; fill char with codes 0-127 repeatedly
+ldx #31	;r/w register
++vdc_set_rx
+ldx #10	; 10 x 128 = 16 x 80 .. 16 lines of 80 chars
+fillcstart:
+ldy #$00
+- +vdc_sty
+iny
+bpl -
+dex
+bne fillcstart
+
+; print the menu below the test stuff
+- lda prgtxt,x
++vdc_sta
+inx
+bne -
+- lda prgtxt+$0100,x
++vdc_sta
+inx
+bne -
+- lda prgtxt+$0200,x
++vdc_sta
+inx
+bne -
+
+
+; fill attr memory with different attributes for each row
+
+; set start address for vdc attribute write
+lda #vdcattributehi	;hi
+ldx #18
++vdc_sta_rx
+lda #$00	;lo
+ldx #19
++vdc_sta_rx
+ldx #31		;r/w register
++vdc_set_rx
+
+; fill the main test area attributes
+ldy #$00
+fillastart:
+ldx #5	; 5 chars at same attributes  = 5 x 16 = 80 one line at each of 16 colours
+- +vdc_sty
+dex
+bne -
+iny
+bne fillastart
+
+; fill the row of colour descriptions
+ldy #$41        ;reverse grey for black
+ldx #5
+- +vdc_sty
+dex
+bne -
+
+ldy #1
+fillbstart:
+ldx #5	; 5 chars at same attributes  = 5 x 16 = 80 one line at each of 16 colours
+- +vdc_sty
+dex
+bne -
+iny
+cpy #$10
+bne fillbstart
+
+; fill rest of the menu/instructions area
+ldy #3
+lda #$0e	;fill $300 bytes extra bytes with 'dark' white
+- +vdc_sta
+dex
+bne -
+dey
+bne -
+
+
+; put bright white markers in the corners
+ldx #0
+ldy #0
+
+; top left
+jsr vdc_setscreenxy
+lda #79
++vdc_sta
+jsr vdc_setattrxy
+lda #$0f
++vdc_sta
+
+; top right
+ldx #79
+jsr vdc_setscreenxy
+lda #80
++vdc_sta
+jsr vdc_setattrxy
+lda #$0f
++vdc_sta
+
+; bottom right
+ldy #24
+jsr vdc_setscreenxy
+lda #122
++vdc_sta
+jsr vdc_setattrxy
+lda #$0f
++vdc_sta
+
+; bottom left
+ldx #0
+jsr vdc_setscreenxy
+lda #76
++vdc_sta
+jsr vdc_setattrxy
+lda #$0f
++vdc_sta
+
+; we've now finished drawing the screen & attributes
+
+; put the cursor somewhere
+ldx #$20
+stx crsrx
+ldy #$11
+sty crsry
+jsr vdc_setcrsrxy
+; turn cursor on
+lda #$40	;fast blinking cursor
+ldx #10
++vdc_sta_rx
+
+
+
+
+; =========================================================================
+; start main menu loop
+mainloop:
+
+; Handle the vblank area / text area stuff
+
+;setup for fore/back register
+ldx #26
++vdc_set_rx
+
+; wait until we are out of vblank
+-
+lda vdc_state
+and #$20
+bne -
+
+; **** we are now in the screen/text area ****
+
+;if vblank test is on, set background colour to black
+ldy vblank
+beq +
++vdc_sta_rx
++
+
+; We need to store the _upcoming_ text memory offset here because it latches at the bottom of the screen
+
+lda xsmooth
+beq +	;skip this if we're not doing it
+lsr
+lsr
+lsr ; divide by 8
+eor #$1f
++
+tax
+
+lda ysmooth   ;if this is zero (disabled) it won't make any difference
+lsr
+lsr
+lsr ; divide by 8
+tay
+;ldx #0   ; we set X further up
+jsr screenxy  ;calculate the in memory screen position from X/Y
+lda tmp
+ldx #13	;screen address low
++vdc_sta_rx
+ldx #21	;attribute address low
++vdc_sta_rx
+lda tmp2
+ldx #12	;screen address high
++vdc_sta_rx
+ldx #20	;attribute address high
+clc
+adc #vdcattributehi
++vdc_sta_rx
+
+
+
+
+
+;setup for fore/back register
+ldx #26
++vdc_set_rx
+
+; wait until we are in vblank
+-
+lda vdc_state
+and #$20
+beq -
+
+; **** We are now in the lower border area ****
+
+lda vblank	;stick the vblank colour into background if !0
+beq +
++vdc_sta_rx
++
+
+
+; Here we need to store the _upcoming_ x smooth value
+lda xsmooth
+beq +	;skip this if we're not doing it
+and #$07
+sta tmp
+ldx #25
++vdc_lda_rx
+and #$f0
+clc
+adc tmp
++vdc_sta_rx
++
+
+
+lda ysmooth
+beq +	;skip this if we're not doing it
+and #$07
+sta tmp
+ldx #24
++vdc_lda_rx
+and #$e0
+clc
+adc tmp
++vdc_sta_rx
++
+
+
+
+
+
+
+
+
+; Read the keyboard and process based on what key is pressed, if any
+jsr GETIN
+; beq handlestuff
+
+cmp #65 ; "A"
+bne +
+; switch attributes on/off
+ldx #25
++vdc_lda_rx
+eor #$40
++vdc_sta_rx
+jmp handlestuff
++
+
+
+cmp #66 ; "B"
+bne +
+; switch background cycle on/off
+lda backcycle
+beq bb
+lda #$00
+sta backcycle
+lda #50
+sta backcyclecount
+lda #$e0
+ldx #26
++vdc_sta_rx
+jmp handlestuff
+bb: lda #$01
+sta backcycle
+jmp handlestuff
++
+
+
+cmp #67 ; "C"
+bne +
+; cycle cursor mode
+ldx #10
++vdc_lda_rx
+clc
+adc #$20
+and #$7f
++vdc_sta_rx
+jmp handlestuff
++
+
+
+cmp #68 ; "D" for double pixel mode
+beq +
+jmp ++
++
+; switch pixel double (40/80col mode) on/off
+lda pixeldouble
+beq pd
+
+; turn pixel double off, reset registers to default
+ldx #25
++vdc_lda_rx
+and #$ef
++vdc_sta_rx
+lda #$70
+sta ctbits
+ldx #0 ;total horiz char positions
+stx pixeldouble
+lda #$7f
++vdc_sta_rx
+ldx #1 ; active horiz chars
+lda #80
++vdc_sta_rx
+ldx #2 ; horiz sync position
+lda #$66
++vdc_sta_rx
+ldx #22 ; char horiz size control
+lda #$78
++vdc_sta_rx
+ldx #27 ; address inc per row
+lda #$0
++vdc_sta_rx
+jmp handlestuff
+
+pd:	; pixeldouble is off, turn it on
+ldx #25
++vdc_lda_rx
+ora #$10
++vdc_sta_rx
+sta pixeldouble
+lda #$80
+sta ctbits
+ldx #0 ;total horiz char positions
+lda #63
++vdc_sta_rx
+ldx #1 ; active horiz chars
+lda #40
++vdc_sta_rx
+ldx #2 ; horiz sync position
+lda #55
++vdc_sta_rx
+ldx #22 ; char horiz size control
+lda #$89
++vdc_sta_rx
+ldx #27 ; address inc per row
+lda #40
++vdc_sta_rx
+jmp handlestuff
+++
+
+
+cmp #69 ; "E" - expanded character test for intercharacter gap rendering
+beq +
+jmp ++
++
+; switch expanded character test on/off
+lda expandedchars
+beq pe
+
+; turn expandedchars off, reset registers to default
+lda #$70
+sta ctbits
+ldx #0 ;total horiz char positions (default of $7f / 127 * default char width of 8 = 1016 total horiz pixels )
+stx expandedchars
+lda #$7f
++vdc_sta_rx
+ldx #2      ; horiz sync position
+lda #$66    ;$66 / 102 * 8 = 816
++vdc_sta_rx
+ldx #3 ; horiz/vert sync width
+lda #$49    ;default, equals width of 9*8=72
++vdc_sta_rx
+ldx #22 ; char horiz size control
+lda #$78
++vdc_sta_rx
+ldx #34 ; display begin
+lda #125
++vdc_sta_rx
+ldx #35 ; display end
+lda #100
++vdc_sta_rx
+jmp handlestuff
+
+pe:	; expandedchars is off, turn it on
+lda #$80
+sta expandedchars
+sta ctbits
+ldx #0      ;total horiz char positions
+;lda #$70    ; ($70 / 112 * new char width of 9 = 1008 total horiz pixels )
+lda #$71    ; ($71 / 113 * new char width of 9 = 1017 total horiz pixels )
++vdc_sta_rx
+ldx #2      ; horiz sync position
+lda #$5f    ;$5f / 95 * 9 = 855
++vdc_sta_rx
+ldx #3      ; horiz/vert sync width
+lda #$48    ; equals width of 8*9=72
++vdc_sta_rx
+ldx #22 ; char horiz size control
+lda #$89
++vdc_sta_rx
+ldx #34 ; display begin
+lda #6
++vdc_sta_rx
+ldx #35 ; display end
+lda #89
++vdc_sta_rx
+jmp handlestuff
+++
+
+
+cmp #70 ; "F"
+bne +
+; switch character blink/flash rate high/low
+ldx #24
++vdc_lda_rx
+eor #$20
++vdc_sta_rx
+jmp handlestuff
++
+
+
+cmp #71 ; "G"
+bne +
+; switch between char/graphics modes
+ldx #25
++vdc_lda_rx
+eor #$80
++vdc_sta_rx
+jmp handlestuff
++
+
+
+cmp #72 ; "H"
+bne ++   ; switch horizontal blanking test on/off
+ldx #34
++vdc_lda_rx
+cmp #6        ; is it already on?
+bne +
+
+; horizontal blanking test already on, so reload kernal defaults
++vdc_sta_rx
+ldx #34
+lda #125
++vdc_sta_rx     ;r34 = 125 (default)
+ldx #35
+lda #100
++vdc_sta_rx     ;r35 = 100 (default)
+jmp handlestuff
+
++   ;turn horizontal blanking test on
++vdc_sta_rx
+ldx #34
+lda #6
++vdc_sta_rx     ;r34 = 6 (one charwidth to the left of the left border)
+ldx #35
+lda #88
++vdc_sta_rx     ;r35 = 88 (one charwidth to the right of the right border)
+jmp handlestuff
+++
+
+
+cmp #73 ; "I"
+beq +   ; switch between interlace/non interlace modes
+jmp ++
++
+ldx #8
++vdc_lda_rx
+and #$03
+eor #$03
+bne imcon
+
+; interlace mode off, load defaults
++vdc_sta_rx
+ldx #$04
+lda #$26
++vdc_sta_rx     ;r4 = 38 total vdc rows (default)
+ldx #$06
+lda #$19
++vdc_sta_rx     ;R6 = 25 rows displayed (default)
+ldx #$07
+lda #$20
++vdc_sta_rx     ;R7 = 32 vertical sync at 32 (default)
+jmp handlestuff
+
+imcon   ;interlace mode on
++vdc_sta_rx
+ldx #$04
+lda #$4c
++vdc_sta_rx     ;r4 = 76 total vdc rows (2*default)
+ldx #$06
+lda #$32
++vdc_sta_rx     ;R6=50 rows displayed (2*default)
+ldx #$07
+lda #$40
++vdc_sta_rx     ;R7=58 vertical sync at 58 (2*default)
+jmp handlestuff
+++
+
+
+cmp #82 ; "R"
+bne +
+; switch reverse screen on/off
+ldx #24
++vdc_lda_rx
+eor #$40
++vdc_sta_rx
+jmp handlestuff
++
+
+
+cmp #83 ; "S"
+bne +
+; switch semi-graphics mode on/off
+ldx #25
++vdc_lda_rx
+eor #$20
++vdc_sta_rx
+jmp handlestuff
++
+
+
+cmp #86 ; "V"
+bne +
+; vblank test
+lda vblank
+eor #$ff
+sta vblank
+ldx #26
+lda #$e0
++vdc_sta_rx
+jmp handlestuff
++
+
+
+cmp #88 ; "X"
+bne +
+; switch x smooth test on/off
+lda xsmooth
+beq xx
+
+; turn xsmooth off, reset registers
+lda #$00
+sta xsmooth
+lda smoothdefault
+sta smoothcount
+lda #$00
+ldx #13	;screen address low
++vdc_sta_rx
+ldx #21	;attribute address low
++vdc_sta_rx
+ldx #25
++vdc_lda_rx
+ora #$07
++vdc_sta_rx
+lda #$60
+ldx #10	;turn on cursor
++vdc_sta_rx
+jmp handlestuff
+
+xx:	; xsmooth is off, turn it on
+lda #$20
+ldx #10	;turn off cursor
++vdc_sta_rx
+lda #$ff
+sta xsmoothdir
+sta xsmooth
+jmp handlestuff
++
+
+
+cmp #89 ; "Y"
+beq +
+jmp upbit
++
+; switch y smooth test on/off
+lda ysmooth
+beq yy
+
+; turn ysmooth off, reset registers
+lda smoothdefault
+sta smoothcount
+lda #$00
+sta ysmooth
+ldx #13	;screen address low
++vdc_sta_rx
+ldx #12	;screen address hi
++vdc_sta_rx
+ldx #21	;attribute address low
++vdc_sta_rx
+lda #vdcattributehi
+ldx #20
++vdc_sta_rx
+ldx #24
++vdc_lda_rx
+and #$f0
++vdc_sta
+lda #$60
+ldx #10	;turn on cursor
++vdc_sta_rx
+jmp handlestuff
+
+yy:	; ysmooth is off, turn it on
+lda #$20
+ldx #10	;turn off cursor
++vdc_sta_rx
+ldy #$00
+sty ysmoothdir
+iny
+sty ysmooth
+jmp handlestuff
++
+
+
+upbit:
+cmp #145 ; up cursor
+bne +
+dec crsry
+jsr setcrsr
+jmp handlestuff
++
+
+
+cmp #17 ; down cursor
+bne +
+inc crsry
+jsr setcrsr
+jmp handlestuff
++
+
+
+cmp #157 ; left cursor
+bne +
+dec crsrx
+jsr setcrsr
+jmp handlestuff
++
+
+
+cmp #29 ; right cursor
+bne +
+inc crsrx
+jsr setcrsr
+jmp handlestuff
++
+
+
+cmp #19 ; home - home cursor
+bne +
+lda #0
+sta crsrx
+sta crsry
+jsr setcrsr
+jmp handlestuff
++
+
+
+cmp #43 ; minus - decrease smooth scroll speed
+bne +
+dec smoothdefault
+bne minus
+inc smoothdefault
+minus:
+jmp handlestuff
++
+
+
+cmp #45 ; plus - increase smooth scroll speed
+bne +
+inc smoothdefault
+bpl minus
+dec smoothdefault
+jmp handlestuff
++
+
+
+cmp #44 ; , - decrease xsync position
+bne +
+ldx #2
++vdc_ldy_rx
+dey
++vdc_sty_rx
+jmp handlestuff
++
+
+
+cmp #46 ; . - increase xsync position
+bne +
+ldx #2
++vdc_ldy_rx
+iny
++vdc_sty_rx
+jmp handlestuff
++
+
+
+; 0-9 are settings for horizontal size control
+cmp #48 ; "0"
+bne +
+ldx #22 ; char horiz size control
+lda #$00; default $78
+ora ctbits
++vdc_sta_rx
+jmp handlestuff:
++
+
+cmp #49 ; "1"
+bne +
+ldx #22 ; char horiz size control
+lda #$01; default $78
+ora ctbits
++vdc_sta_rx
+jmp handlestuff:
++
+
+cmp #50 ; "2"
+bne +
+ldx #22 ; char horiz size control
+lda #$02; default $78
+ora ctbits
++vdc_sta_rx
+jmp handlestuff:
++
+
+cmp #51 ; "3"
+bne +
+ldx #22 ; char horiz size control
+lda #$03; default $78
+ora ctbits
++vdc_sta_rx
+jmp handlestuff:
++
+
+cmp #52 ; "4"
+bne +
+ldx #22 ; char horiz size control
+lda #$04; default $78
+ora ctbits
++vdc_sta_rx
+jmp handlestuff:
++
+
+cmp #53 ; "5"
+bne +
+ldx #22 ; char horiz size control
+lda #$05; default $78
+ora ctbits
++vdc_sta_rx
+jmp handlestuff:
++
+
+cmp #54 ; "6"
+bne +
+ldx #22 ; char horiz size control
+lda #$06; default $78
+ora ctbits
++vdc_sta_rx
+jmp handlestuff:
++
+
+cmp #55 ; "7"
+bne +
+ldx #22 ; char horiz size control
+lda #$07; default $78
+ora ctbits
++vdc_sta_rx
+jmp handlestuff:
++
+
+cmp #56 ; "8"
+bne +
+ldx #22 ; char horiz size control
+lda #$08; default $78
+ora ctbits
++vdc_sta_rx
+jmp handlestuff:
++
+
+cmp #57 ; "9"
+bne +
+ldx #22 ; char horiz size control
+lda #$09; default $78
+ora ctbits
++vdc_sta_rx
+jmp handlestuff:
++
+
+
+; colon - decrease background colour
+cmp #58 ; :
+bne +
+ldx #26
++vdc_lda_rx
+sec
+sbc #$01
+and #$0f
+ora #$e0
++vdc_sta_rx
+jmp handlestuff
++
+
+
+; semicolon - increase background colour
+cmp #59 ; ;
+bne +
+ldx #26
++vdc_lda_rx
+clc
+adc #$01
+and #$0f
+ora #$e0
++vdc_sta_rx
+jmp handlestuff
++
+
+
+cmp #27	;ESC - quit
+bne +
+jmp exit
++
+
+
+
+
+
+; End of checking input, now handle per frame updates/changes
+handlestuff:
+
+lda backcycle
+beq xsmoothbit
+; cycle the background colour if the background colour cycle is enabled
+dec backcyclecount
+bne +
+lda #50
+sta backcyclecount
+lda backcycle
+ldx #26
++vdc_sta_rx
+inc backcycle
++
+
+xsmoothbit:
+ldx xsmooth
+beq ysmoothbit
+
+; xsmooth cycle
+dec smoothcount
+bne +
+lda smoothdefault
+sta smoothcount
+
+ldx xsmooth
+lda xsmoothdir
+bne xneg
+
+inx
+bne x9
+ldx #$ff
+stx xsmoothdir
+jmp x9
+
+xneg:
+dex
+bne x9
+stx xsmoothdir
+ldx #$01
+
+x9:
+stx xsmooth
++ ;jmp endmainloop
+
+
+ysmoothbit:
+lda ysmooth
+bne +
+jmp endmainloop
++
+
+; ysmooth cycle
+dec smoothcount
+beq +
+jmp yend
++
+lda smoothdefault
+sta smoothcount
+
+
+ldy ysmooth
+lda ysmoothdir
+bne yneg
+
+iny
+bpl y9
+ldy #$7f
+sty ysmoothdir
+jmp y9
+
+yneg:
+dey
+bne y9
+sty ysmoothdir
+ldy #$01
+
+y9:
+sty ysmooth
+
+yend:
+
+
+
+
+
+
+
+
+
+
+
+endmainloop:
+jmp mainloop
+
+
+exit:
+
+ldx #26
+lda #$f0
++vdc_sta_rx	; reset to white on black background
+rts	; back to basic
+
+
+
+
+; subroutines
+
+vblankwait:
+
+;setup for fore/back register
+ldx #26
++vdc_set_rx
+
+
+; wait until we are out of vblank
+- lda vdc_state
+and #$20
+bne -
+
+;if vblank test is on, set background colour to black
+ldy vblank
+beq +
++vdc_sta
++
+
+; wait until we are in vblank
+- lda vdc_state
+and #$20
+beq -
+
+lda vblank	;stick the vblank colour into background if !0
+beq +
++vdc_sta
++
+
+rts
+
+
+setcrsr:
+ldx crsrx
+ldy crsry
+jsr vdc_setcrsrxy
+rts
+
+
+vdc_setcrsrxy:
+; move the cursor to x,y (destructive to A)
+jsr screenxy
+lda #15		;crsr low byte
+sta vdc_reg
+lda tmp
++vdc_sta
+lda #14		;crsr high byte
+sta vdc_reg
+lda tmp2
++vdc_sta
+rts
+
+vdc_setscreenxy:
+; move the memory pointer to screen position x,y (destructive to A)
+jsr screenxy
+lda #19		;low byte
+sta vdc_reg
+lda tmp
++vdc_sta
+lda #18		;high byte
+sta vdc_reg
+lda tmp2
++vdc_sta
+lda #31		;r/w register
+sta vdc_reg
+rts
+
+vdc_setattrxy:
+; move the memory pointer to attribute position x,y (destructive to A)
+jsr screenxy
+lda #19		;low byte
+sta vdc_reg
+lda tmp
++vdc_sta
+lda #18		;high byte
+sta vdc_reg
+lda tmp2
+clc
+adc #vdcattributehi
++vdc_sta
+lda #31		;r/w register
+sta vdc_reg
+rts
+
+
+screenxy:	;calculate screen position into tmp1/2 from x/y
+lda #$00
+sta tmp2
+tya
+asl
+rol tmp2
+asl
+rol tmp2
+sta tmp
+;tmp1/2 now = y*4
+tya
+clc
+adc tmp
+bcc +
+inc tmp2
++ ; A / temp2 now = y*5
+asl
+rol tmp2
+asl
+rol tmp2
+asl
+rol tmp2
+asl
+rol tmp2
+sta tmp	;tmp1/2 = y*5*16 = y*80
+clc
+txa
+adc tmp
+sta tmp
+bcc +
+inc tmp2	;tmp1/2 = y*80 + x
++ rts
+
+
+
+
+
+
+
+
+; --- Variables
+
+vblank:         !by $00
+vblanktmp:      !by $00
+
+backcycle:      !by $00
+backcyclecount: !by 50
+
+smoothcount:    !by 1
+smoothdefault:  !by 1
+
+xsmooth:        !by $00
+xsmoothdir      !by 0
+
+ysmooth:        !by $00
+ysmoothdir      !by 0
+
+pixeldouble:    !by 0
+expandedchars:  !by 0
+
+ctbits:			!by $70
+
+
+;    |---------01-3-5----0----5----0----5----0----5----0----5----0----5----01234567-|
+prgtxt
+!tx "blackdkgrydkblublue dkgrngreendkcyncyan dkred red dkpplpurplbrownyelowltgrywhite" ; 0
+!tx "x128 vdc tester v0.2 by strobe                                         esc: exit" ; 1
+!tx "--------------------------------------------------------------------------------" ; 2
+!tx "a: attributes on/off     r: screen reverse on/off     crsr/home: move cursor    " ; 3
+!tx "f: char flash rate  c: crsr mode  g: text/bitmap mode toggle   h: horiz blanking" ; 4
+!tx "b: background cycle on/off ('border' should match bckgrnd, except bitmap mode)  " ; 5
+!tx "x: xsmooth test - left border should be fixed, right border 'open'     e: expand" ; 6
+!tx "y: ysmooth test    : ; background colour    + - smooth speed    s: semi-gfx mode" ; 7
+!tx "  d: 40/80columns  v: show vblank area    i: interlace/50 rows  0-9 char width  " ; 8
+!tx "                                                                                " ; 9
+
+
+
+; end of Errol's code ----------------------------------------------------
+
+
+progsize = * - entry

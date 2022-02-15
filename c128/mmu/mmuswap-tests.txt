@@ -1,0 +1,1096 @@
+This document describes the mmuswap test, what they are designed to test, how
+they test it and what the results mean.
+
+When doing these tests on a real C128, please make sure you do a
+'hard reset/cold start/power cycle' after each test.
+
+If for any of the tests the border color is not green, please report the
+test name and border color to blackystardust68@yahoo.com,
+use the topic 'mmuswap real c128 result'
+
+
+Below are the descriptions of the tests:
+
+-------------------------------------------------------------------------------
+
+mmuswap-00:
+===========
+
+Goal:
+-----
+This test is designed to see if accesses to the zero page in not shared low
+memory always go to bank 0 when the zero page is mapped to page 0 and bank 0.
+
+Procedure:
+----------
+- Set up shared top memory space of 16KB.
+- Put the value #$aa in bank 0 address $80.
+- Put the value #$55 in bank 1 address $80.
+- Read back the value from bank 0 address $80.
+- Read back the value from bank 1 address $80.
+
+Border Colors:
+--------------
+Green:  #$55 got read from $80 in bank 0, #$55 got read from $80 in bank 1.
+White:  #$55 got read from $80 in bank 0, #$aa got read from $80 in bank 1.
+Purple: #$aa got read from $80 in bank 0, #$55 got read from $80 in bank 1.
+Cyan:   #$aa got read from $80 in bank 0, #$aa got read from $80 in bank 1.
+Red:    something unexpected got read from $80 in either bank 0 or bank 1.
+
+Results:
+--------
+Dr Blutig:      Green
+William McCabe: Green (PAL 128D)
+Hypnosis:       Green [8722R2]
+Tokra:          Green (german PAL C128 flat)
+Strobe:         Green (PAL flat 128) [MOS 8722R2 4485]
+jcompton:		Green (NTSC 128D) [8722R2 1788]
+jcompton:       Green (NTSC C128 flat)
+mutetus:		Green (128 PAL flat)
+hedning:        Green (PAL C128DCR) [8722R2 4487]
+Zenda:          Green (PAL C128 flat) [8722R2 4385]
+x128-r41548:	Green
+
+Conclusion:
+-----------
+Accesses to the zero page when the zero page is mapped to page 0 and bank 0
+always go to bank 0, even if the current bank is a different bank.
+
+-------------------------------------------------------------------------------
+
+mmuswap-01:
+===========
+
+Goal:
+-----
+This test is designed to see if accesses to the stack page in not shared low
+memory always go to bank 0 when the stack page is mapped to page 1 and bank 0.
+
+Procedure:
+----------
+- Set up shared top memory space of 16KB.
+- Put the value #$aa in bank 0 address $0120.
+- Put the value #$55 in bank 1 address $0120.
+- Read back the value from bank 0 address $0120.
+- Read back the value from bank 1 address $0120.
+
+Border Colors:
+--------------
+Green:  #$55 got read from $0120 in bank 0, #$55 got read from $0120 in bank 1.
+White:  #$55 got read from $0120 in bank 0, #$aa got read from $0120 in bank 1.
+Purple: #$aa got read from $0120 in bank 0, #$55 got read from $0120 in bank 1.
+Cyan:   #$aa got read from $0120 in bank 0, #$aa got read from $0120 in bank 1.
+Red:    something unexpected got read from $0120 in either bank 0 or bank 1.
+
+Results:
+--------
+Dr Blutig:      Green
+William McCabe: Green (PAL 128D)
+Hypnosis:       Green [8722R2 4487]
+Tokra:          Green (german PAL C128 flat)
+Strobe:         Green (PAL flat 128) [MOS 8722R2 4485]
+jcompton:		Green (NTSC 128D) [8722R2 1788]
+jcompton:       Green (NTSC C128 flat)
+mutetus:		Green (128 PAL flat)
+hedning:        Green (PAL C128DCR) [8722R2 4487]
+Zenda:          Green (PAL C128 flat) [8722R2 4385]
+x128-r41548:	Green
+
+Conclusion:
+-----------
+Accesses to the stack page when the stack page is mapped to page 1 and bank 0
+always go to bank 0, even if the current bank is a different bank.
+
+-------------------------------------------------------------------------------
+
+mmuswap-02:
+===========
+
+Goal:
+-----
+This test is designed to see if accesses to page 2 in not shared low
+memory always go to bank 0.
+
+Procedure:
+----------
+- Set up shared top memory space of 16KB.
+- Put the value #$aa in bank 0 address $0220.
+- Put the value #$55 in bank 1 address $0220.
+- Read back the value from bank 0 address $0220.
+- Read back the value from bank 1 address $0220.
+
+Border Colors:
+--------------
+Black: #$55 got read from $0220 in bank 0, #$55 got read from $0220 in bank 1.
+White: #$55 got read from $0220 in bank 0, #$aa got read from $0220 in bank 1.
+Green: #$aa got read from $0220 in bank 0, #$55 got read from $0220 in bank 1.
+Cyan:  #$aa got read from $0220 in bank 0, #$aa got read from $0220 in bank 1.
+Red:   something unexpected got read from $0220 in either bank 0 or bank 1.
+
+Results:
+--------
+Dr Blutig:      Green
+William McCabe: Green (PAL 128D)
+Hypnosis:       Green [8722R2 4487]
+Tokra:          Green (german PAL C128 flat)
+Strobe:         Green (PAL flat 128) [MOS 8722R2 4485]
+jcompton:		Green (NTSC 128D) [8722R2 1788]
+jcompton:       Green (NTSC C128 flat)
+mutetus:		Green (128 PAL flat)
+hedning:        Green (PAL C128DCR) [8722R2 4487]
+Zenda:          Green (PAL C128 flat) [8722R2 4385]
+x128-r41548:	Green
+
+Conclusion:
+-----------
+Accesses to page 2 (and other non zero and stack pages) when page 2 is not in
+shared memory go to the current bank.
+
+-------------------------------------------------------------------------------
+
+mmuswap-03:
+===========
+
+Goal:
+-----
+This test is designed to see what happens when the zero page is mapped to the
+stack page and the stack page remains at its own location.
+
+Procedure:
+----------
+- Put the value #$aa in $20.
+- Put the value #$55 in $0120.
+- Relocate the zero page to the stack page.
+- Read back the value from address $20.
+- Read back the value from address $0120.
+
+Border Colors:
+--------------
+Red:   Something unexpected was read from $20 or $0120.
+Green: #$55 got read from $20 and #$55 got read from $0120.
+Black: #$55 got read from $20 and #$aa got read from $0120.
+White: #$aa got read from $20 and #$55 got read from $0120.
+Cyan:  #$aa got read from $20 and #$aa got read from $0120.
+
+Results:
+--------
+Dr Blutig:      Green
+William McCabe: Green (PAL 128D)
+Hypnosis:       Green [8722R2 4487]
+Tokra:          Green (german PAL C128 flat)
+Strobe:         Green (PAL flat 128) [MOS 8722R2 4485]
+jcompton:		Green (NTSC 128D) [8722R2 1788]
+jcompton:       Green (NTSC C128 flat)
+mutetus:		Green (128 PAL flat)
+hedning:        Green (PAL C128DCR) [8722R2 4487]
+Zenda:          Green (PAL C128 flat) [8722R2 4385]
+x128-r41548:	Green
+
+Conclusion:
+-----------
+When the zero page is mapped to the stack page and the stack page remains
+mapped to itself, any access to the zero page winds up at the stack page, and
+any access to the stack page stays at the stack page, the zero page itself
+becomes inaccessable.
+
+-------------------------------------------------------------------------------
+
+mmuswap-04:
+===========
+
+Goal:
+-----
+This test is designed to see what happens when the stack page is mapped to the
+zero page and the zero page remains at its own location.
+
+Procedure:
+----------
+- Put the value #$aa in $20.
+- Put the value #$55 in $0120.
+- Relocate the stack page to the zero page.
+- Read back the value from address $20.
+- Read back the value from address $0120.
+
+Border Colors:
+--------------
+Red:   Something unexpected was read from $20 or $0120.
+Green: #$aa got read from $20 and #$aa got read from $0120.
+Black: #$55 got read from $20 and #$aa got read from $0120.
+White: #$aa got read from $20 and #$55 got read from $0120.
+Cyan:  #$55 got read from $20 and #$55 got read from $0120.
+
+Results:
+--------
+Dr Blutig:      Green
+William McCabe: Black (PAL 128D)
+Hypnosis:       Green [8722R2 4487]
+Tokra:          Green (german PAL C128 flat)
+Strobe:         Green (PAL flat 128) [MOS 8722R2 4485]
+jcompton:		Green (NTSC 128D) [8722R2 1788]
+jcompton:       Green (NTSC C128 flat)
+mutetus:		Green (128 PAL flat)
+hedning:        Green (PAL C128DCR) [8722R2 4487]
+Zenda:          Black (PAL C128 flat) [8722R2 4385]
+x128-r41548:	Green
+
+Conclusion:
+-----------
+When the stack page is mapped to the zero page and the zero page remains
+mapped to itself, any access to the stack page winds up at the zero page, and
+any access to the zero page stays at the zero page, the stack page itself
+becomes inaccessable.
+
+-------------------------------------------------------------------------------
+
+mmuswap-05:
+===========
+
+Goal:
+-----
+This test is designed to see what happens when the zero page is mapped to the
+stack page and the stack page is mapped to the zero page.
+
+Procedure:
+----------
+- Put the value #$aa in $20.
+- Put the value #$55 in $0120.
+- Relocate the stack page to the zero page.
+- Read back the value from address $20.
+- Read back the value from address $0120.
+
+Border Colors:
+--------------
+Red:   #$aa got read from $20 and #$55 got read from $0120.
+Green: #$55 got read from $20 and #$aa got read from $0120.
+
+Results:
+--------
+Dr Blutig:      Green
+William McCabe: Green (PAL 128D)
+Hypnosis:       Green [8722R2 4487]
+Tokra:          Green (german PAL C128 flat)
+Strobe:         Green (PAL flat 128) [MOS 8722R2 4485]
+jcompton:		Green (NTSC 128D) [8722R2 1788]
+jcompton:       Green (NTSC C128 flat)
+mutetus:		Green (128 PAL flat)
+hedning:        Green (PAL C128DCR) [8722R2 4487]
+Zenda:          Green (PAL C128 flat) [8722R2 4385]
+x128-r41548:	Green
+
+Conclusion:
+-----------
+When the stack page is mapped to the zero page and the zero page is mapped to
+the stack page, they swap.
+
+-------------------------------------------------------------------------------
+
+mmuswap-06:
+===========
+
+Goal:
+-----
+This test is designed to see when both page pointers point to the same page,
+where does the reverse pointer mechanism point to, and where do we find page 2
+
+Procedure:
+----------
+- Put the value #$55 in address $80.
+- Put the value #$aa in address $0180.
+- Put the value #$33 in address $0280.
+- Relocate page 0 to page 2.
+- Read back the value from address $80.
+- Read back the value from address $0180.
+- Read back the value from address $0280.
+- Relocate page 1 to page 2 as well.
+- Read back the value from address $80.
+- Read back the value from address $0180.
+- Read back the value from address $0280.
+- Relocate page 0 to page 2 again.
+- Read back the value from address $80.
+- Read back the value from address $0180.
+- Read back the value from address $0280.
+
+Border Colors:
+--------------
+Black:      #$33 did not get read from $80 after zero page mapping.
+White:      #$aa did not get read from $0180 after zero page mapping.
+Cyan:       #$55 did not get read from $0280 after zero page mapping.
+Light blue: #$33 did not get read from $80 after zero and stack page mapping.
+Purple:     #$33 did not get read from $0180 after zero and stack page mapping.
+Blue:       #$aa did not get read from $0280 after zero and stack page mapping.
+Yellow:     #$33 did not get read from $80 after zero and stack page mapping.
+Orange:     #$33 did not get read from $0180 after zero and stack page mapping.
+Brown:      #$aa did not get read from $0280 after zero and stack page mapping.
+
+Green:      #$33 got read from $80 after after zero page and stack page
+            mapping AND #$33 got read from $0180 after zero and stack page
+            mapping AND #$aa got read from $0280 after zero and stack page
+            mapping.
+
+Results:
+--------
+Dr Blutig:      Green
+William McCabe: Green (PAL 128D)
+Hypnosis:       Blue [8722R2 4487]
+Tokra:          Blue  (german PAL C128 flat)
+Strobe:         Blue  (PAL flat 128) [MOS 8722R2 4485]
+jcompton:		Green (NTSC 128D) [8722R2 1788]
+jcompton:       Green (NTSC C128 flat)
+mutetus:		Green (128 PAL flat)
+hedning:        Green (PAL C128DCR) [8722R2 4487]
+Zenda:          Blue  (PAL C128 flat) [8722R2 4385]
+x128-r41548:	Green
+
+Conclusion:
+-----------
+When swaping both the zero page and stack page with page 2, the stack page
+accesses wind up in page 2 and page 2 accesses wind up in both the zero page
+and the stack page, zero page accesses wind up going nowhere.
+
+-------------------------------------------------------------------------------
+
+mmuswap-07:
+===========
+
+Goal:
+-----
+This test is designed to see what happens when the zero page is mapped to a
+non-shared RAM page in bank 0.
+
+Procedure:
+----------
+- Put the value #$aa in $80.
+- Put the value #$55 in $3080.
+- Relocate the zero page to page 30 bank 0.
+- Read back the value from address $80.
+- Read back the value from address $3080.
+
+Border Colors:
+--------------
+Red:   #$aa got read from $80 and #$55 got read from $3080.
+Green: #$55 got read from $80 and #$aa got read from $3080.
+
+Results:
+--------
+Dr Blutig:      Green
+William McCabe: Green (PAL 128D)
+Hypnosis:       Green [8722R2 4487]
+Tokra:          Green (german PAL C128 flat)
+Strobe:         Green (PAL flat 128) [MOS 8722R2 4485]
+jcompton:		Green (NTSC 128D) [8722R2 1788]
+jcompton:       Green (NTSC C128 flat)
+mutetus:		Green (128 PAL flat)
+hedning:        Green (PAL C128DCR) [8722R2 4487]
+Zenda:          Green (PAL C128 flat) [8722R2 4385]
+x128-r41548:	Green
+
+Conclusion:
+-----------
+Waiting on results.
+
+-------------------------------------------------------------------------------
+
+mmuswap-08:
+===========
+
+Goal:
+-----
+This test is designed to see what happens when the zero page is mapped to a
+non-shared RAM page in bank 1, what value do we get back from that non-shared
+RAM page in bank 0 and bank 1.
+
+Procedure:
+----------
+- Put the value #$aa in $80 bank 0.
+- Put the value #$55 in $3080 bank 0.
+- Put the value #$33 in $3080 bank 1.
+- Put the value #$11 in $80 bank 1.
+- Relocate the zero page to page 30 bank 1.
+- Read back the value from address $3080 bank 0.
+- Read back the value from address $3080 bank 1.
+
+Border Colors:
+--------------
+Black:      #$33 got read from $3080 bank 0 and #$33 got read from $3080 bank 1.
+White:      #$33 got read from $3080 bank 0 and #$55 got read from $3080 bank 1.
+Cyan:       #$33 got read from $3080 bank 0 and #$aa got read from $3080 bank 1.
+Purple:     #$55 got read from $3080 bank 0 and #$33 got read from $3080 bank 1.
+Blue:       #$55 got read from $3080 bank 0 and #$55 got read from $3080 bank 1.
+Yellow:     #$55 got read from $3080 bank 0 and #$aa got read from $3080 bank 1.
+Light Blue: #$aa got read from $3080 bank 0 and #$33 got read from $3080 bank 1.
+Light Grey: #$aa got read from $3080 bank 0 and #$55 got read from $3080 bank 1.
+Orange:     #$aa got read from $3080 bank 0 and #$aa got read from $3080 bank 1.
+Green:      #$55 got read from $3080 bank 0 and #$11 got read from $3080 bank 1.
+Red:        Something unexpected got read from $3080 in either bank 0 or bank 1.
+
+Results:
+--------
+Dr Blutig:      Green
+William McCabe: Green (PAL 128D)
+Hypnosis:       Green [8722R2 4487]
+Tokra:          Green (german PAL C128 flat)
+Strobe:         Green (PAL flat 128) [MOS 8722R2 4485]
+jcompton:		Green (NTSC 128D) [8722R2 1788]
+jcompton:       Green (NTSC C128 flat)
+mutetus:		Green (128 PAL flat)
+hedning:        Green (PAL C128DCR) [8722R2 4487]
+Zenda:          Green (PAL C128 flat) [8722R2 4385]
+x128-r41548:	Green
+
+Conclusion:
+-----------
+When the zero page is mapped to a non-shared RAM page in bank 1, any accees to
+that non-shared RAM page in bank 0 stays at that page, and any access to that
+non-shared RAM page in bank 1 is mapped to the zero page in bank 1.
+
+-------------------------------------------------------------------------------
+
+mmuswap-09:
+===========
+
+Goal:
+-----
+This test is designed to see what happens when the zero page is mapped to an
+I/O page, does the I/O page back translate or is it I/O.
+
+Procedure:
+----------
+- Put the value #$aa in $10.
+- Put the value #$55 in $d010 when it is I/O.
+- Put the value #$33 in #d010 when it is RAM.
+- Relocate the zero page to page d0.
+- Read back the value from address $10.
+- Read back the value from address $d010 when it is I/O.
+
+Border Colors:
+--------------
+Green:  #$33 got read from $10 and #$55 got read from $d010.
+Yellow: #$33 got read from $10 and #$33 got read from $d010.
+Black:  #$33 got read from $10 and #$aa got read from $d010.
+White:  #$33 got read from $10 and an unexpected value got read from $d010.
+Cyan:   #$55 got read from $10.
+Purple: #$aa got read from $10.
+Blue:   an unexpected value got read from $10.
+
+Results:
+--------
+Dr Blutig:      Green
+William McCabe: Green (PAL 128D)
+Hypnosis:       Green [8722R2 4487]
+Tokra:          Green (german PAL C128 flat)
+Strobe:         Green (PAL flat 128) [MOS 8722R2 4485]
+jcompton:		Green (NTSC 128D) [8722R2 1788]
+jcompton:       Green (NTSC C128 flat)
+mutetus:		Green (128 PAL flat)
+hedning:        Green (PAL C128DCR) [8722R2 4487]
+Zenda:          Green (PAL C128 flat) [8722R2 4385]
+x128-r41548:	Green
+
+Conclusion:
+-----------
+When the zero page is mapped to an I/O page, any access to that I/O page will
+stay at that I/O page, no back translation is done.
+
+-------------------------------------------------------------------------------
+
+mmuswap-10:
+===========
+
+Goal:
+-----
+This test is designed to see what happens when the zero page in non-shared
+memory is mapped to the zero page in bank 1.
+
+Procedure:
+----------
+- Switch off shared memory
+- Put the value #$aa in $80 in bank 0.
+- Relocate the zero page to the zero page of bank 1.
+- Put the value #$55 in $80 in bank 1.
+- Put the zero page back to the zero page of bank 0.
+- Read back the value from address $80 in bank 0.
+- Relocate the zero page to the zero page of bank 1.
+- Read back the value from address $80 in bank 1.
+
+Border Colors:
+--------------
+Red:    an unexpected value got read from $80 in either bank 0 or bank 1.
+Black:  #$55 got read back from $80 bank 0 and #$55 from $80 bank 1.
+White:  #$55 got read back from $80 bank 0 and #$aa from $80 bank 1.
+Green:  #$aa got read back from $80 bank 0 and #$55 from $80 bank 1.
+Purple: #$aa got read back from $80 bank 0 and #$aa from $80 bank 1.
+
+Results:
+--------
+Dr Blutig:      Green
+William McCabe: Green (PAL 128D)
+Hypnosis:       Green [8722R2 4487]
+Tokra:          Green (german PAL C128 flat)
+Strobe:         Green (PAL flat 128) [MOS 8722R2 4485]
+jcompton:		Green (NTSC 128D) [8722R2 1788]
+jcompton:       Green (NTSC C128 flat)
+mutetus:		Green (128 PAL flat)
+hedning:        Green (PAL C128DCR) [8722R2 4487]
+Zenda:          Green (PAL C128 flat) [8722R2 4385]
+x128-r41548:	Green
+
+Conclusion:
+-----------
+When the zero page in non-shared memory is mapped to the zero page in bank 1,
+any access to the zero page in bank 0 goes to the zero page in bank 1, and when
+the zero page is not mapped any access to the zero page in bank 0 stays at the
+zero page in bank 0. Mapping the zero page in bank 0 in non-shared memory
+to the zero page of bank 1 swaps the pages.
+
+-------------------------------------------------------------------------------
+
+mmuswap-11:
+===========
+
+Goal:
+-----
+This test is designed to see what happens when the zero page in shared
+memory is mapped to the zero page in bank 1.
+
+Procedure:
+----------
+- Switch on bottom shared memory 1kb.
+- Put the value #$aa in $80 in bank 0.
+- Relocate the zero page to the zero page of bank 1.
+- Put the value #$55 in $80 in bank 1.
+- Put the zero page back to the zero page of bank 0.
+- Read back the value from address $80 in bank 0.
+- Relocate the zero page to the zero page of bank 1.
+- Read back the value from address $80 in bank 1.
+
+Border Colors:
+--------------
+Red:    an unexpected value got read from $80 in either bank 0 or bank 1.
+Green:  #$55 got read back from $80 bank 0 and #$55 from $80 bank 1.
+White:  #$55 got read back from $80 bank 0 and #$aa from $80 bank 1.
+Cyan:   #$aa got read back from $80 bank 0 and #$55 from $80 bank 1.
+Purple: #$aa got read back from $80 bank 0 and #$aa from $80 bank 1.
+
+Results:
+--------
+Dr Blutig:      Green
+William McCabe: Green (PAL 128D)
+Hypnosis:       Green [8722R2 4487]
+Tokra:          Green (german PAL C128 flat)
+Strobe:         Green (PAL flat 128) [MOS 8722R2 4485]
+jcompton:		Green (NTSC 128D) [8722R2 1788]
+jcompton:       Green (NTSC C128 flat)
+mutetus:		Green (128 PAL flat)
+hedning:        Green (PAL C128DCR) [8722R2 4487]
+Zenda:          Green (PAL C128 flat) [8722R2 4385]
+x128-r41548:	Green
+
+Conclusion:
+-----------
+When the zero page in shared memory is mapped to the zero page in bank 1, no
+swapping is done, shared memory takes priority and any access to the zero page
+remains in bank 0.
+
+-------------------------------------------------------------------------------
+
+mmuswap-12:
+===========
+
+Goal:
+-----
+This test is designed to see what happens when the zero page in non-shared
+memory is mapped to the zero page in bank 1 and the zero page is read from
+bank 1, does it back translate.
+
+Procedure:
+----------
+- Switch off shared memory
+- Put the value #$aa in $80 in bank 0.
+- Relocate the zero page to the zero page of bank 1.
+- Put the value #$55 in $80 in bank 1.
+- Read back the value from address $80 in bank 1.
+- Switch on shared memory, top only, 16KB
+- Use code in upper shared memory to read zero page in bank 1.
+
+Border Colors:
+--------------
+Red:    an unexpected value got read from $80 in either bank 0 or bank 1.
+Green:  #$55 got read back from $80 bank 0 and #$55 from $80 bank 1.
+White:  #$55 got read back from $80 bank 0 and #$aa from $80 bank 1.
+Cyan:   #$aa got read back from $80 bank 0 and #$55 from $80 bank 1.
+Purple: #$aa got read back from $80 bank 0 and #$aa from $80 bank 1.
+
+Results:
+--------
+Dr Blutig:      Green
+William McCabe: Green (PAL 128D)
+Hypnosis:       Green [8722R2 4487]
+Tokra:          Green (german PAL C128 flat)
+Strobe:         Green (PAL flat 128) [MOS 8722R2 4485]
+jcompton:		Green (NTSC 128D) [8722R2 1788]
+jcompton:       Green (NTSC C128 flat)
+mutetus:		Green (128 PAL flat)
+hedning:        Green (PAL C128DCR) [8722R2 4487]
+Zenda:          Green (PAL C128 flat) [8722R2 4385]
+x128-r41548:	Green
+
+Conclusion:
+-----------
+When the zero page in non-shared memory is mapped to the zero page in bank 1
+and the zero page is read from bank 1 there is no back translation to bank 0,
+the access stays in bank 1.
+
+-------------------------------------------------------------------------------
+
+mmuswap-13:
+===========
+
+Goal:
+-----
+This test is designed to see what happens when the zero page in non-shared
+memory is mapped to page $30 in bank 1 and the zero page is read from
+bank 0, do we get page $30 from bank 0 or bank 1.
+
+Procedure:
+----------
+- Switch on shared memory, top only, 16KB
+- Put the value #$aa in $80 in bank 0.
+- Put the value #$55 in $3080 in bank 0.
+- Put the value #$33 in $3080 in bank 1.
+- Relocate the zero page to page $30 in bank 1.
+- Read back the value from address $80 in bank 0.
+
+Border Colors:
+--------------
+Black:  #$aa got read back from $80.
+White:  #$55 got read back from $80.
+Green:  #$33 got read back from $80.
+Purple: an unexpected value got read from $80.
+
+Results:
+--------
+Dr Blutig:      Green
+William McCabe: Green (PAL 128D)
+Hypnosis:       Green [8722R2 4487]
+Tokra:          Green (german PAL C128 flat)
+Strobe:         Green (PAL flat 128) [MOS 8722R2 4485]
+jcompton:		Green (NTSC 128D) [8722R2 1788]
+jcompton:       Green (NTSC C128 flat)
+mutetus:		Green (128 PAL flat)
+hedning:        Green (PAL C128DCR) [8722R2 4487]
+Zenda:          Green (PAL C128 flat) [8722R2 4385]
+x128-r41548:	Green
+
+Conclusion:
+-----------
+When the zero page in non-shared memory is mapped to page $30 in bank 1 and the
+zero page is read from bank 0, we get page $30 from bank 1. 
+
+-------------------------------------------------------------------------------
+
+mmuswap-14:
+===========
+
+Goal:
+-----
+This test is designed to see what happens when the zero page in non-shared
+memory is mapped to page $30 in bank 1 and page $30 is read in bank 1 and
+page $30 is read in bank 0, what do we get from either bank.
+
+Procedure:
+----------
+- Switch on shared memory, top only, 16KB
+- Put the value #$aa in $80 in bank 0.
+- Put the value #$55 in $3080 in bank 0.
+- Relocate the zero page to the zero page in bank 1.
+- Put the value #$33 in $80 in bank 1.
+- Relocate the zero page to the zero page in bank 0.
+- Put the value #$11 in $3080 in bank 1.
+- Relocate the zero page to $30xx in bank 1.
+- Read back the value from address $3080 in bank 0.
+- Read back the value from address $3080 in bank 1.
+
+Border Colors:
+--------------
+Red:         Something unexpected got read from $3080 in either bank 0 or bank 1.
+Black:       #$aa got read back from $3080 bank 1 and #$aa from $3080 in bank 0.
+White:       #$aa got read back from $3080 bank 1 and #$55 from $3080 in bank 0.
+Cyan:        #$aa got read back from $3080 bank 1 and #$33 from $3080 in bank 0.
+Purple:      #$33 got read back from $3080 bank 1 and #$aa from $3080 in bank 0.
+Green:       #$33 got read back from $3080 bank 1 and #$55 from $3080 in bank 0.
+Yellow:      #$33 got read back from $3080 bank 1 and #$33 from $3080 in bank 0.
+Brown:       #$11 got read back from $3080 bank 1 and #$aa from $3080 in bank 0.
+Light Blue:  #$11 got read back from $3080 bank 1 and #$55 from $3080 in bank 0.
+Light Green: #$11 got read back from $3080 bank 1 and #$33 from $3080 in bank 0.
+
+Results:
+--------
+Dr Blutig:      Green
+William McCabe: Green (PAL 128D)
+Hypnosis:       Green [8722R2 4487]
+Tokra:          Green (german PAL C128 flat)
+Strobe:         Green (PAL flat 128) [MOS 8722R2 4485]
+jcompton:		Green (NTSC 128D) [8722R2 1788]
+jcompton:       Green (NTSC C128 flat)
+mutetus:		Green (128 PAL flat)
+hedning:        Green (PAL C128DCR) [8722R2 4487]
+Zenda:          Green (PAL C128 flat) [8722R2 4385]
+x128-r41548:	Green
+
+Conclusion:
+-----------
+When the zero page in non-shared memory is mapped to page $30 in bank 1 and
+page $30 is read in bank 1 we get the zero page of bank 1, and when we read
+page $30 in bank 0, we get page $30 in bank 0.
+
+-------------------------------------------------------------------------------
+
+mmuswap-15:
+===========
+
+Goal:
+-----
+This test is designed to see what happens when the zero page in shared
+memory is mapped to page $30 in bank 1 and the zero page is read from
+bank 0, do we get page $30 from bank 0 or bank 1.
+
+Procedure:
+----------
+- Switch on shared memory, bottom and top, 8KB
+- Put the value #$aa in $80 in bank 0.
+- Put the value #$55 in $3080 in bank 0.
+- Put the value #$33 in $3080 in bank 1.
+- Relocate the zero page to page $30 in bank 1.
+- Read back the value from address $80 in bank 0.
+
+Border Colors:
+--------------
+Black:  #$aa got read back from $80.
+Green:  #$55 got read back from $80.
+Cyan:   #$33 got read back from $80.
+Purple: an unexpected value got read from $80.
+
+Results:
+--------
+Dr Blutig:      Green
+William McCabe: Green (PAL 128D)
+Hypnosis:       Green [8722R2 4487]
+Tokra:          Green (german PAL C128 flat)
+Strobe:         Green (PAL flat 128) [MOS 8722R2 4485]
+jcompton:		Green (NTSC 128D) [8722R2 1788]
+jcompton:       Green (NTSC C128 flat)
+mutetus:		Green (128 PAL flat)
+hedning:        Green (PAL C128DCR) [8722R2 4487]
+Zenda:          Green (PAL C128 flat) [8722R2 4385]
+x128-r41548:	Green
+
+Conclusion:
+-----------
+When the zero page in shared memory is mapped to page $30 in bank 1 and we
+read the zero page, we get page $30 from bank 0. Shared memory takes priority
+and so the zero page is mapped to bank 0 instead.
+
+-------------------------------------------------------------------------------
+
+mmuswap-16:
+===========
+
+Goal:
+-----
+This test is designed to see what happens when the zero page in shared
+memory is mapped to page $30 in bank 1 and page $30 is read in bank 1 and
+page $30 is read in bank 0, what do we get from either bank.
+
+Procedure:
+----------
+- Switch on shared memory, top and bottom, 8KB
+- Put the value #$aa in $80 in bank 0.
+- Put the value #$55 in $3080 in bank 0.
+- Relocate the zero page to the zero page in bank 1.
+- Put the value #$33 in $80 in bank 1.
+- Relocate the zero page to the zero page in bank 0.
+- Put the value #$11 in $3080 in bank 1.
+- Relocate the zero page to $30xx in bank 1.
+- Read back the value from address $3080 in bank 0.
+- Read back the value from address $3080 in bank 1.
+
+Border Colors:
+--------------
+Red:         Something unexpected got read from $3080 in either bank 0 or bank 1.
+Black:       #$aa got read back from $3080 bank 1 and #$aa from $3080 in bank 0.
+White:       #$aa got read back from $3080 bank 1 and #$55 from $3080 in bank 0.
+Cyan:        #$aa got read back from $3080 bank 1 and #$33 from $3080 in bank 0.
+Purple:      #$33 got read back from $3080 bank 1 and #$aa from $3080 in bank 0.
+Green:       #$33 got read back from $3080 bank 1 and #$55 from $3080 in bank 0.
+Yellow:      #$33 got read back from $3080 bank 1 and #$33 from $3080 in bank 0.
+Brown:       #$11 got read back from $3080 bank 1 and #$aa from $3080 in bank 0.
+Light Blue:  #$11 got read back from $3080 bank 1 and #$55 from $3080 in bank 0.
+Light Green: #$11 got read back from $3080 bank 1 and #$33 from $3080 in bank 0.
+
+Results:
+--------
+Dr Blutig:      Green
+William McCabe: Green (PAL 128D)
+Hypnosis:       Green [8722R2 4487]
+Tokra:          Green (german PAL C128 flat)
+Strobe:         Green (PAL flat 128) [MOS 8722R2 4485]
+jcompton:		Green (NTSC 128D) [8722R2 1788]
+jcompton:       Green (NTSC C128 flat)
+mutetus:		--    (128 PAL flat)
+hedning:        Green (PAL C128DCR) [8722R2 4487]
+Zenda:          Green (PAL C128 flat) [8722R2 4385]
+x128-r41548:	Green
+
+Conclusion:
+-----------
+When the zero page in shared memory is mapped to page $30 in bank 1 and we read
+from page $30 in bank 1 we get the zero page of bank 1, and when we read from
+page $30 in bank 0 we get page $30 from bank 0. The back translation only
+happens in the target bank.
+
+-------------------------------------------------------------------------------
+
+mmuswap-17:
+===========
+
+Goal:
+-----
+This test is designed to see what happens when the zero page in non-shared
+memory is mapped to page $e0 in bank 1 and the zero page is read from
+bank 0 while page $e0 is in shared memory, do we get page $e0 from bank 0
+or bank 1.
+
+Procedure:
+----------
+- Switch on shared memory, bottom only, 16KB
+- Put the value #$aa in $80 in bank 0.
+- Put the value #$55 in $e080 in bank 0.
+- Put the value #$33 in $e080 in bank 1.
+- Switch on shared memory, top only, 8KB
+- Relocate the zero page to page $e0 in bank 1.
+- Read back the value from address $80 in bank 0.
+
+Border Colors:
+--------------
+Black:  #$aa got read back from $80.
+White:  #$55 got read back from $80.
+Green:  #$33 got read back from $80.
+Purple: an unexpected value got read from $80.
+
+Results:
+--------
+Dr Blutig:      Green
+William McCabe: Green (PAL 128D)
+Hypnosis:       Green [8722R2 4487]
+Tokra:          Green (german PAL C128 flat)
+Strobe:         Green (PAL flat 128) [MOS 8722R2 4485]
+jcompton:		Green (NTSC 128D) [8722R2 1788]
+jcompton:       Green (NTSC C128 flat)
+mutetus:		Green (128 PAL flat)
+hedning:        Green (PAL C128DCR) [8722R2 4487]
+Zenda:          Green (PAL C128 flat) [8722R2 4385]
+x128-r41548:	Green
+
+Conclusion:
+-----------
+When the zero page in non-shared memory is mapped to page $e0 in bank 1 and
+the zero page is read from bank 0 while page $e0 is in shared memory, we get
+page $e0 from bank 1. The fact that the target page is in shared memory does
+not matter for the bank.
+
+-------------------------------------------------------------------------------
+
+mmuswap-18:
+===========
+
+Goal:
+-----
+This test is designed to see what happens when the zero page in shared
+memory is mapped to page $e0 in bank 1 and the zero page is read from
+bank 0 while page $e0 is in shared memory, do we get page $e0 from bank 0
+or bank 1.
+
+Procedure:
+----------
+- Switch on shared memory, bottom only, 16KB
+- Put the value #$aa in $80 in bank 0.
+- Put the value #$55 in $e080 in bank 0.
+- Put the value #$33 in $e080 in bank 1.
+- Switch on shared memory, bottom and top, 8KB
+- Relocate the zero page to page $e0 in bank 1.
+- Read back the value from address $80 in bank 0.
+
+Border Colors:
+--------------
+Black:  #$aa got read back from $80.
+Green:  #$55 got read back from $80.
+Cyan:   #$33 got read back from $80.
+Purple: an unexpected value got read from $80.
+
+Results:
+--------
+Dr Blutig:      Green
+William McCabe: Green (PAL 128D)
+Hypnosis:       Green [8722R2 4487]
+Tokra:          Green (german PAL C128 flat)
+Strobe:         Green (PAL flat 128) [MOS 8722R2 4485]
+jcompton:		Green (NTSC 128D) [8722R2 1788]
+jcompton:       Green (NTSC C128 flat)
+mutetus:		--    (128 PAL flat)
+hedning:        Green (PAL C128DCR) [8722R2 4487]
+Zenda:          Green (PAL C128 flat) [8722R2 4385]
+x128-r41548:	Green
+
+Conclusion:
+-----------
+When the zero page in shared memory is mapped to page $e0 in bank 1 and
+we read the zero page while page $e0 is in shared memory, we get page $e0 in
+bank 0. The fact that the zero page is in shared memory makes the access only
+happen to the target in bank 0.
+
+-------------------------------------------------------------------------------
+
+mmuswap-19:
+===========
+
+Goal:
+-----
+This test is designed to see what happens when the zero page is mapped to page
+$30 AND the stack page is mapped to page $30, what do we get in the zero page
+and what do we get in the stack page.
+
+Procedure:
+----------
+- Switch off shared memory
+- Put the value #$aa in $20 in bank 0.
+- Put the value #$55 in $0120 in bank 0.
+- Put the value #$33 in $3020 in bank 0.
+- Relocate the zero page to page $30 in bank 0.
+- Relocate the stack page to page $30 in bank 0.
+- Read back the value from address $20 in bank 0.
+- Read back the value from address $0120 in bank 0.
+
+Border Colors:
+--------------
+Red:    an unexpected value got read from $20 or $0120.
+Black:  #$aa got read back from $20 and #$aa from $0120.
+White:  #$aa got read back from $20 and #$55 from $0120.
+Cyan:   #$aa got read back from $20 and #$33 from $0120.
+Purple: #$55 got read back from $20 and #$aa from $0120.
+Blue:   #$55 got read back from $20 and #$55 from $0120.
+Yellow: #$55 got read back from $20 and #$33 from $0120.
+Orange: #$33 got read back from $20 and #$aa from $0120.
+Brown:  #$33 got read back from $20 and #$55 from $0120.
+Green:  #$33 got read back from $20 and #$33 from $0120.
+
+Results:
+--------
+Dr Blutig:      Green
+William McCabe: Green (PAL 128D)
+Hypnosis:       Green [8722R2 4487]
+Tokra:          Green (german PAL C128 flat)
+Strobe:         Green (PAL flat 128) [MOS 8722R2 4485]
+jcompton:		Green (NTSC 128D) [8722R2 1788]
+jcompton:       Green (NTSC C128 flat)
+mutetus:		--     (128 PAL flat)
+hedning:        Green (PAL C128DCR) [8722R2 4487]
+Zenda:          Green (PAL C128 flat) [8722R2 4385]
+x128-r41548:	Green
+
+Conclusion:
+-----------
+When the zero page is mapped to page $30 AND the stack page is mapped to page
+$30, we get page $30 when accesseing the zero page AND we get page $30 when
+accessing the stack page.
+
+-------------------------------------------------------------------------------
+
+mmuswap-20:
+===========
+
+Goal:
+-----
+This test is designed to see what happens when the zero page is mapped to page
+$30 and then the stack page is mapped to page $30, what do we get in page $30,
+is it the zero page or the stack page.
+
+Procedure:
+----------
+- Switch off shared memory
+- Put the value #$aa in $20 in bank 0.
+- Put the value #$55 in $0120 in bank 0.
+- Put the value #$33 in $3020 in bank 0.
+- Relocate the zero page to page $30 in bank 0.
+- Relocate the stack page to page $30 in bank 0.
+- Read back the value from address $3020 in bank 0.
+
+Border Colors:
+--------------
+Red:   an unexpected value got read from $3020.
+Black: #$aa got read back from $3020.
+White: #$55 got read back from $3020.
+Cyan:  #$33 got read back from $3020.
+
+Results:
+--------
+Dr Blutig:      White
+William McCabe: White (PAL 128D)
+Hypnosis:       Black [8722R2 4487]
+Tokra:          Black (german PAL C128 flat)
+Strobe:         Black (PAL flat 128) [MOS 8722R2 4485]
+jcompton:		White (NTSC 128D) [8722R2 1788]
+jcompton:       White (NTSC C128 flat)
+mutetus:		--    (128 PAL flat)
+hedning:        White (PAL C128DCR) [8722R2 4487]
+Zenda:          White (PAL C128 flat) [8722R2 4385]
+x128-r41548:	White
+
+Conclusion:
+-----------
+Depending on the hardware either zero page or stack page takes priority.
+
+-------------------------------------------------------------------------------
+
+mmuswap-21:
+===========
+
+Goal:
+-----
+This test is designed to see what happens when the stack page is mapped to page
+$30 and then the zero page is mapped to page $30, what do we get in page $30,
+is it the zero page or the stack page.
+
+Procedure:
+----------
+- Switch off shared memory
+- Put the value #$aa in $20 in bank 0.
+- Put the value #$55 in $0120 in bank 0.
+- Put the value #$33 in $3020 in bank 0.
+- Relocate the zero page to page $30 in bank 0.
+- Relocate the stack page to page $30 in bank 0.
+- Read back the value from address $3020 in bank 0.
+
+Border Colors:
+--------------
+Red:   an unexpected value got read from $3020.
+Black: #$aa got read back from $3020.
+White: #$55 got read back from $3020.
+Cyan:  #$33 got read back from $3020.
+
+Results:
+--------
+Dr Blutig:      White
+William McCabe: White (PAL 128D)
+Hypnosis:       Black [8722R2 4487]
+Tokra:          Black (german PAL C128 flat)
+Strobe:         Black (PAL flat 128) [MOS 8722R2 4485]
+jcompton:		White (NTSC 128D) [8722R2 1788]
+jcompton:       White (NTSC C128 flat)
+mutetus:		--    (128 PAL flat)
+hedning:        White (PAL C128DCR) [8722R2 4487]
+Zenda:          White (PAL C128 flat) [8722R2 4385]
+x128-r41548:	White
+
+Conclusion:
+-----------
+Depending on the hardware either zero page or stack page takes priority.

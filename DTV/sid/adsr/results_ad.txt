@@ -1,0 +1,31 @@
+Results for data/dtv_norel_00.raw: Delay: 8, Attack: 0, Top: 8, Decay: 24
+Results for data/dtv_norel_01.raw: Delay: 24, Attack: 0, Top: 8, Decay: 72
+Results for data/dtv_norel_02.raw: Delay: 40, Attack: 0, Top: 8, Decay: 120
+Results for data/dtv_norel_03.raw: Delay: 56, Attack: 0, Top: 8, Decay: 168
+Results for data/dtv_norel_04.raw: Delay: 80, Attack: 0, Top: 8, Decay: 240
+Results for data/dtv_norel_05.raw: Delay: 120, Attack: 0, Top: 8, Decay: 360
+Results for data/dtv_norel_06.raw: Delay: 144, Attack: 0, Top: 8, Decay: 432
+Results for data/dtv_norel_07.raw: Delay: 176, Attack: 0, Top: 8, Decay: 528
+Results for data/dtv_norel_08.raw: Delay: 208, Attack: 0, Top: 8, Decay: 624
+Results for data/dtv_norel_09.raw: Delay: 504, Attack: 0, Top: 8, Decay: 1512
+Results for data/dtv_norel_0a.raw: Delay: 1008, Attack: 0, Top: 8, Decay: 3024
+Results for data/dtv_norel_0b.raw: Delay: 2032, Attack: 0, Top: 8, Decay: 6096
+Results for data/dtv_norel_0c.raw: Delay: 2040, Attack: 0, Top: 8, Decay: 6120
+Results for data/dtv_norel_0d.raw: Delay: 6008, Attack: 0, Top: 8, Decay: 18024
+Results for data/dtv_norel_0e.raw: Delay: 10008, Attack: 0, Top: 8, Decay: 30024
+Results for data/dtv_norel_0f.raw: Delay: 16024, Attack: 0, Top: 8, Decay: 48072
+Results for data/dtv_norel_10.raw: Delay: 8, Attack: 24, Top: 24, Decay: 24
+Results for data/dtv_norel_20.raw: Delay: 8, Attack: 40, Top: 40, Decay: 24
+Results for data/dtv_norel_30.raw: Delay: 8, Attack: 56, Top: 56, Decay: 24
+Results for data/dtv_norel_40.raw: Delay: 8, Attack: 80, Top: 80, Decay: 24
+Results for data/dtv_norel_50.raw: Delay: 8, Attack: 120, Top: 120, Decay: 24
+Results for data/dtv_norel_60.raw: Delay: 8, Attack: 144, Top: 144, Decay: 24
+Results for data/dtv_norel_70.raw: Delay: 8, Attack: 176, Top: 176, Decay: 24
+Results for data/dtv_norel_80.raw: Delay: 8, Attack: 208, Top: 208, Decay: 24
+Results for data/dtv_norel_90.raw: Delay: 8, Attack: 504, Top: 504, Decay: 24
+Results for data/dtv_norel_a0.raw: Delay: 8, Attack: 1008
+Results for data/dtv_norel_b0.raw: Delay: 8, Attack: 2032
+Results for data/dtv_norel_c0.raw: Delay: 8, Attack: 2040
+Results for data/dtv_norel_d0.raw: Delay: 8, Attack: 6008
+Results for data/dtv_norel_e0.raw: Delay: 8, Attack: 10008
+Results for data/dtv_norel_f0.raw: Delay: 8, Attack: 16024
